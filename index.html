@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Interaktif: Kata Nama Am & Khas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .quiz-container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .screen {
+            display: none; /* Sembunyikan semua skrin secara lalai */
+        }
+        .screen.active {
+            display: block;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #0056B3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        p, label {
+            font-size: 1.3rem;
+            line-height: 1.6;
+        }
+
+        #name-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #007BFF, #0056B3);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        #question-container {
+            margin-bottom: 20px;
+        }
+        #question-text {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .option {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1.2rem;
+        }
+        .option:hover:not(:disabled) {
+            background-color: #e9ecef;
+            border-color: #007BFF;
+        }
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .option:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        #feedback-text {
+            color: #dc3545;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+            height: 20px;
+        }
+
+        .highlight-name {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        #sentence-input {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        #progress-text {
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        #result-text {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+
+        <!-- Skrin Mula -->
+        <div id="start-screen" class="screen active">
+            <h1>Kuiz Kata Nama</h1>
+            <p>Sila masukkan nama anda untuk memulakan kuiz.</p>
+            <label for="name-input">Nama Pelajar:</label>
+            <input type="text" id="name-input" placeholder="Contoh: Ahmad">
+            <button id="start-btn" class="btn">Mula Kuiz</button>
+        </div>
+
+        <!-- Skrin Kuiz -->
+        <div id="quiz-screen" class="screen">
+            <p id="progress-text">Soalan 1/20</p>
+            <div id="question-container">
+                <p id="question-text">Soalan akan dipaparkan di sini.</p>
+                <div id="options-container">
+                    <!-- Pilihan jawapan atau ruang bina ayat akan dijana oleh JavaScript -->
+                </div>
+                <p id="feedback-text"></p>
+            </div>
+        </div>
+
+        <!-- Skrin Keputusan -->
+        <div id="result-screen" class="screen">
+            <h1>Keputusan Kuiz</h1>
+            <p id="result-text">Tahniah, [Nama Pelajar]! Anda telah menjawab dengan betul X daripada 20 soalan.</p>
+            <button id="restart-btn" class="btn">Cuba Lagi</button>
+        </div>
+
+    </div>
+
+    <script>
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const nameInput = document.getElementById('name-input');
+
+        const progressText = document.getElementById('progress-text');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultText = document.getElementById('result-text');
+        const feedbackText = document.getElementById('feedback-text');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let playerName = "";
+
+        const questions = [
+            { type: 'mcq', question: "Perkataan 'kereta' ialah contoh...", options: ["Kata Nama Am", "Kata Nama Khas"], answer: "Kata Nama Am" },
+            { type: 'mcq', question: "Pilih ejaan yang betul.", options: ["Kuala Lumpur", "kuala lumpur"], answer: "Kuala Lumpur" },
+            { type: 'mcq', question: "Yang manakah Kata Nama Khas?", options: ["guru", "Cikgu Aisyah"], answer: "Cikgu Aisyah" },
+            { type: 'bina_ayat', question: "Bina satu ayat menggunakan Kata Nama Am berikut:", word: "buku" },
+            { type: 'mcq', question: "Pilih ayat dengan Kata Nama Khas yang betul.", options: ["Saya tinggal di Johor.", "Saya tinggal di johor."], answer: "Saya tinggal di Johor." },
+            { type: 'mcq', question: "Yang manakah Kata Nama Am?", options: ["Proton Saga", "kereta"], answer: "kereta" },
+            { type: 'mcq', question: "Nama 'Jalil' ialah...", options: ["Kata Nama Am", "Kata Nama Khas"], answer: "Kata Nama Khas" },
+            { type: 'bina_ayat', question: "Bina satu ayat menggunakan Kata Nama Khas berikut:", word: "Malaysia" },
+            { type: 'mcq', question: "Pilih ejaan yang betul bagi nama haiwan peliharaan.", options: ["Kucing saya bernama si tompok.", "Kucing saya bernama Si Tompok."], answer: "Kucing saya bernama Si Tompok." },
+            { type: 'mcq', question: "Yang manakah BUKAN Kata Nama Khas?", options: ["Malaysia", "negara"], answer: "negara" },
+            { type: 'mcq', question: "Perkataan 'polis' ialah...", options: ["Kata Nama Am", "Kata Nama Khas"], answer: "Kata Nama Am" },
+            { type: 'bina_ayat', question: "Bina satu ayat menggunakan Kata Nama Am berikut:", word: "sekolah" },
+            { type: 'mcq', question: "Pilih Kata Nama Khas dalam senarai ini.", options: ["sungai", "Sungai Pahang"], answer: "Sungai Pahang" },
+            { type: 'mcq', question: "Kata Nama Am ditulis dengan...", options: ["huruf kecil", "huruf besar"], answer: "huruf kecil" },
+            { type: 'mcq', question: "Kata Nama Khas ditulis dengan...", options: ["huruf kecil", "huruf besar"], answer: "huruf besar" },
+            { type: 'mcq', question: "Yang manakah Kata Nama Am?", options: ["bangunan", "Menara Berkembar Petronas"], answer: "bangunan" },
+            { type: 'bina_ayat', question: "Bina satu ayat menggunakan Kata Nama Khas berikut:", word: "Cikgu Kamal" },
+            { type: 'mcq', question: "Perkataan 'Adidas' ialah...", options: ["Kata Nama Am", "Kata Nama Khas"], answer: "Kata Nama Khas" },
+            { type: 'mcq', question: "Yang manakah BUKAN Kata Nama Am?", options: ["murid", "Ahmad"], answer: "Ahmad" },
+            { type: 'mcq', question: "Perkataan 'negeri' ialah...", options: ["Kata Nama Am", "Kata Nama Khas"], answer: "Kata Nama Am" }
+        ];
+
+        startBtn.addEventListener('click', () => {
+            playerName = nameInput.value;
+            if (playerName.trim() === "") {
+                alert("Sila masukkan nama anda.");
+                return;
+            }
+            startScreen.classList.remove('active');
+            quizScreen.classList.add('active');
+            startQuiz();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            resultScreen.classList.remove('active');
+            startScreen.classList.add('active');
+            nameInput.value = "";
+        });
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            let currentQuestion = questions[currentQuestionIndex];
+            progressText.innerText = `Soalan ${currentQuestionIndex + 1}/${questions.length}`;
+            questionText.innerText = currentQuestion.question;
+
+            if (currentQuestion.type === 'mcq') {
+                currentQuestion.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.classList.add('option');
+                    button.addEventListener('click', selectAnswer);
+                    optionsContainer.appendChild(button);
+                });
+            } else if (currentQuestion.type === 'bina_ayat') {
+                questionText.innerText += `\n"${currentQuestion.word}"`;
+                const textArea = document.createElement('textarea');
+                textArea.id = 'sentence-input';
+                textArea.placeholder = 'Tulis ayat anda di sini...';
+                optionsContainer.appendChild(textArea);
+
+                const submitBtn = document.createElement('button');
+                submitBtn.innerText = 'Hantar';
+                submitBtn.classList.add('btn');
+                submitBtn.addEventListener('click', submitSentence);
+                optionsContainer.appendChild(submitBtn);
+            }
+        }
+
+        function resetState() {
+            feedbackText.innerHTML = "";
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const isCorrect = selectedBtn.innerText === questions[currentQuestionIndex].answer;
+
+            if (isCorrect) {
+                feedbackText.innerHTML = "";
+                selectedBtn.classList.add('correct');
+                score++;
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                });
+                setTimeout(goToNextQuestion, 1000);
+            } else {
+                selectedBtn.classList.add('incorrect');
+                selectedBtn.disabled = true;
+                feedbackText.innerHTML = `Oops, salah tu <span class="highlight-name">${playerName}</span>! Sila baca soalan dan cuba lagi.`;
+            }
+        }
+
+        function submitSentence() {
+            const textArea = document.getElementById('sentence-input');
+            if (textArea.value.trim() === "") {
+                alert("Sila bina ayat terlebih dahulu.");
+                return;
+            }
+            score++; // Markah diberi untuk sebarang percubaan
+            goToNextQuestion();
+        }
+
+
+
+        function goToNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            quizScreen.classList.remove('active');
+            resultScreen.classList.add('active');
+            resultText.innerText = `Tahniah, ${playerName}! Anda telah menjawab dengan betul ${score} daripada ${questions.length} soalan.`;
+        }
+    </script>
+
+</body>
+</html>
+
